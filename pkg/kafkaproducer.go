@@ -4,10 +4,11 @@ import (
 	"context"
 	"log"
 
+	"github.com/google/uuid"
 	"github.com/segmentio/kafka-go"
 )
 
-func Producer(brokerAddress, topic string, partition int, data map[string]interface{}) {
+func Producer(brokerAddress, topic string, partition int, data []byte) {
 	// make a writer that produces to topic, using the least-bytes distribution
 	w := &kafka.Writer{
 		Addr:     kafka.TCP(brokerAddress),
@@ -15,18 +16,11 @@ func Producer(brokerAddress, topic string, partition int, data map[string]interf
 		Balancer: &kafka.LeastBytes{},
 	}
 
+	uuid := uuid.New().String()
 	err := w.WriteMessages(context.Background(),
 		kafka.Message{
-			Key:   []byte("Key-A"),
-			Value: []byte("Hello World!"),
-		},
-		kafka.Message{
-			Key:   []byte("Key-B"),
-			Value: []byte("One!"),
-		},
-		kafka.Message{
-			Key:   []byte("Key-C"),
-			Value: []byte("Two!"),
+			Key:   []byte(uuid),
+			Value: data,
 		},
 	)
 	if err != nil {

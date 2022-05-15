@@ -3,9 +3,11 @@ package pkg
 import (
 	"context"
 	"fmt"
+	"kafka-test/gen/pb"
 	"log"
 
 	"github.com/segmentio/kafka-go"
+	"google.golang.org/protobuf/proto"
 )
 
 func Consumer(brokerAddress, topic string) {
@@ -18,11 +20,16 @@ func Consumer(brokerAddress, topic string) {
 	})
 
 	for {
+		prod := &pb.Product{}
 		m, err := r.ReadMessage(context.Background())
 		if err != nil {
 			break
 		}
-		fmt.Printf("message at offset %d: %s = %s\n", m.Offset, string(m.Key), string(m.Value))
+		if err := proto.Unmarshal(m.Value, prod); err != nil {
+			fmt.Println(err)
+		}
+
+		fmt.Printf("message at offset %d: %s = %v\n", m.Offset, string(m.Key), prod)
 	}
 
 	if err := r.Close(); err != nil {

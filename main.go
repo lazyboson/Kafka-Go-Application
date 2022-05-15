@@ -1,19 +1,22 @@
 package main
 
 import (
+	"fmt"
 	"net"
 	"strconv"
 
+	pb "kafka-test/gen/pb"
 	"kafka-test/pkg"
 
 	"github.com/segmentio/kafka-go"
+	"google.golang.org/protobuf/proto"
 )
 
 const (
-	topic             = "my-topic"
-	brokerAddress     = "localhost:9093"
-	partition         = 3
-	replicationFactor = 2
+	topic             = "my-topic-1"
+	brokerAddress     = "localhost:9092"
+	partition         = 1
+	replicationFactor = 1
 )
 
 func newKafkaTopic(topic, brokerUrl string, partitionCount, replicationFactor int) {
@@ -51,8 +54,16 @@ func newKafkaTopic(topic, brokerUrl string, partitionCount, replicationFactor in
 
 func main() {
 	newKafkaTopic(topic, brokerAddress, partition, replicationFactor)
-	data := make(map[string]interface{})
-	pkg.Producer(brokerAddress, topic, partition, data)
+	product := pb.Product {
+		Id: "1234-uuuti",
+		Name: "CKl",
+		Price: 3457.9,
+	}
+	out, err := proto.Marshal(&product)
+	if err != nil {
+		fmt.Println(err)	
+	}
+	pkg.Producer(brokerAddress, topic, partition, out)
 	pkg.Consumer(brokerAddress, topic)
 
 }
