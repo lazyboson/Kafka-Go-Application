@@ -2,19 +2,20 @@ package main
 
 import (
 	"fmt"
+	"google.golang.org/protobuf/proto"
+	"kafka-test/gen/pb"
+	"log"
 	"net"
 	"strconv"
 
-	pb "kafka-test/gen/pb"
 	"kafka-test/pkg"
 
 	"github.com/segmentio/kafka-go"
-	"google.golang.org/protobuf/proto"
 )
 
 const (
-	topic             = "my-topic-1"
-	brokerAddress     = "localhost:9092"
+	topic             = "product-topic3"
+	brokerAddress     = "localhost:9093"
 	partition         = 1
 	replicationFactor = 1
 )
@@ -54,16 +55,26 @@ func newKafkaTopic(topic, brokerUrl string, partitionCount, replicationFactor in
 
 func main() {
 	newKafkaTopic(topic, brokerAddress, partition, replicationFactor)
-	product := pb.Product {
-		Id: "1234-uuuti",
-		Name: "CKl",
-		Price: 3457.9,
+	w := &kafka.Writer{
+		Addr:     kafka.TCP(brokerAddress),
+		Topic:    topic,
+		Balancer: &kafka.LeastBytes{},
 	}
-	out, err := proto.Marshal(&product)
-	if err != nil {
-		fmt.Println(err)	
-	}
-	pkg.Producer(brokerAddress, topic, partition, out)
-	pkg.Consumer(brokerAddress, topic)
 
+	for i := 1; i < 100; i++ {
+		product := pb.Product{
+			Id:    "1234-uuuti",
+			Name:  "CKl",
+			Price: float32(i),
+		}
+		out, err := proto.Marshal(&product)
+		if err != nil {
+			fmt.Println(err)
+		}
+		pkg.Producer(w, out)
+	}
+	pkg.Consumer(brokerAddress, topic)
+	if err := w.Close(); err != nil {
+		log.Fatal("failed to close writer:", err)
+	}
 }

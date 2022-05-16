@@ -13,7 +13,7 @@ import (
 func Consumer(brokerAddress, topic string) {
 	r := kafka.NewReader(kafka.ReaderConfig{
 		Brokers:  []string{brokerAddress},
-		GroupID:  "messageConsumer",
+		GroupID:  "consumemessage3",
 		Topic:    topic,
 		MinBytes: 1,    // 1B
 		MaxBytes: 10e6, // 10MB
@@ -23,6 +23,7 @@ func Consumer(brokerAddress, topic string) {
 		prod := &pb.Product{}
 		m, err := r.ReadMessage(context.Background())
 		if err != nil {
+			fmt.Println(err)
 			break
 		}
 		if err := proto.Unmarshal(m.Value, prod); err != nil {
